@@ -18,3 +18,6 @@ spring:
     locations: classpath:db/migration
 server:
   port: 8080
+jwt:
+  secret: mySuperSecretKeyMySuperSecretKey123456
+  expiration: 86400000
