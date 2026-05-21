@@ -1,5 +1,6 @@
 package com.mary.booking.controller;
 
+import com.mary.booking.dto.auth.BookingRequest;
 import com.mary.booking.entity.Booking;
 import com.mary.booking.service.BookingService;
 import lombok.RequiredArgsConstructor;
@@ -16,10 +17,10 @@ public class BookingController {
 
     @PostMapping
     public Booking createBooking(
-            @RequestBody Booking booking
+            @RequestBody BookingRequest request
     ) {
 
-        return bookingService.createBooking(booking);
+        return bookingService.createBooking(request);
     }
 
     @GetMapping
