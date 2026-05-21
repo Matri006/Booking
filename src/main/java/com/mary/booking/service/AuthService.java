@@ -1,4 +1,4 @@
-package com.mary.booking.service.impl;
+package com.mary.booking.service;
 
 import com.mary.booking.dto.auth.AuthResponse;
 import com.mary.booking.dto.auth.LoginRequest;
