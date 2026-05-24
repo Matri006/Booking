@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{base :: head}"></head>
+<body>
+<div th:replace="~{base :: navbar}"></div>
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/rooms">Список комнат</a></li>
+                    <li class="breadcrumb-item active">Новая встреча</li>
+                </ol>
+            </nav>
+
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="bi bi-calendar-plus"></i> Новая встреча</h4>
+                </div>
+                <div class="card-body">
+                    <form th:action="@{/bookings/create}" th:object="${booking}" method="post">
+                        <div th:if="${error}" class="alert alert-danger" th:text="${error}">Ошибка</div>
+                        <div class="mb-3">
+                            <label class="form-label">Комната *</label>
+                            <select th:field="*{roomId}" class="form-select" required>
+                                <option value="">Выберите комнату</option>
+                                <option th:each="room : ${rooms}"
+                                        th:value="${room.id}"
+                                        th:text="${room.name + ' (вместимость: ' + room.capacity + ' чел.)'}">
+                                </option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Тема встречи *</label>
+                            <textarea th:field="*{title}" class="form-control" rows="2"
+                                      maxlength="200" placeholder="Введите тему встречи (до 200 символов)"></textarea>
+                            <small class="text-muted"><span id="charCount">0</span>/200</small>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Дата и время начала *</label>
+                            <input type="datetime-local" th:field="*{startTime}" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Дата и время окончания *</label>
+                            <input type="datetime-local" th:field="*{endTime}" class="form-control" required>
+                        </div>
+                        <hr>
+                        <div class="d-flex justify-content-between">
+                            <a href="/rooms" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i> Отмена
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-lg"></i> Забронировать
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.querySelector('[name="title"]')?.addEventListener('input', function() {
+        document.getElementById('charCount').innerText = this.value.length;
+    });
+
+
+    document.addEventListener('DOMContentLoaded', function() {
+        if (document.querySelector('[name="title"]')) {
+            document.getElementById('charCount').innerText = document.querySelector('[name="title"]').value.length;
+        }
+    });
+</script>
+
+<div th:replace="~{base :: footer}"></div>
+</body>
+</html>

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{base :: head}"></head>
+<body>
+<div th:replace="~{base :: navbar}"></div>
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-door-closed"></i> Доступные переговорные комнаты</h2>
+        <a href="/bookings/new" class="btn btn-primary">
+            <i class="bi bi-plus-lg"></i> Новая встреча
+        </a>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-6 mx-auto">
+            <form method="get" action="/rooms" class="d-flex">
+                <input type="text"
+                       name="search"
+                       class="form-control me-2"
+                       placeholder="Поиск по названию или местоположению..."
+                       th:value="${search}">
+                <button type="submit" class="btn btn-outline-primary">
+                    <i class="bi bi-search"></i> Найти
+                </button>
+                <a th:if="${search}" href="/rooms" class="btn btn-outline-secondary ms-2">
+                    <i class="bi bi-x-lg"></i> Сброс
+                </a>
+            </form>
+        </div>
+    </div>
+
+    <div class="row">
+        <div th:each="room : ${rooms.content}" class="col-md-6 col-lg-4 mb-4">
+            <div class="card room-card h-100 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="bi bi-building"></i>
+                        <span th:text="${room.name}">Название</span>
+                    </h5>
+                    <p class="card-text text-muted">
+                        <i class="bi bi-geo-alt"></i> <span th:text="${room.location ?: 'Этаж ' + room.floor + ', комната ' + room.roomNumber}">Расположение</span><br>
+                        <i class="bi bi-people"></i> <span th:text="${room.capacity}">10</span> человек
+                    </p>
+                    <div class="status-free">
+                        <i class="bi bi-check-circle"></i> Доступна для бронирования
+                    </div>
+<!--                    <div th:if="${room.currentStatus == 'FREE'}" class="status-free">-->
+<!--                        <i class="bi bi-check-circle"></i> Свободно-->
+<!--                    </div>-->
+<!--                    <div th:if="${room.currentStatus == 'BUSY'}" class="status-busy">-->
+<!--                        <i class="bi bi-x-circle"></i> Занято до <span th:text="${room.nextFreeTime}">15:00</span>-->
+<!--                    </div>-->
+                    <div class="mt-3">
+                        <a th:href="@{/bookings/new(roomId=${room.id})}" class="btn btn-primary btn-sm w-100">
+                            <i class="bi bi-calendar-plus"></i> Забронировать
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <nav th:if="${totalPages > 0}" aria-label="Page navigation" class="mt-4">
+        <ul class="pagination justify-content-center">
+            <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+                <a class="page-link" th:href="@{/rooms(page=${currentPage - 1}, search=${search})}">Назад</a>
+            </li>
+            <li th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
+                class="page-item" th:classappend="${i == currentPage} ? 'active'">
+                <a class="page-link" th:href="@{/rooms(page=${i}, search=${search})}" th:text="${i + 1}">1</a>
+            </li>
+            <li class="page-item" th:classappend="${currentPage >= totalPages - 1} ? 'disabled'">
+                <a class="page-link" th:href="@{/rooms(page=${currentPage + 1}, search=${search})}">Вперёд</a>
+            </li>
+        </ul>
+    </nav>
+</div>
+
+<div th:replace="~{base :: footer}"></div>
+</body>
+</html>

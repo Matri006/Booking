@@ -4,6 +4,8 @@ import com.mary.booking.entity.Room;
 import com.mary.booking.repository.RoomRepository;
 import com.mary.booking.service.RoomService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -48,5 +50,15 @@ public class RoomServiceImpl implements RoomService {
     @Override
     public void deleteRoom(Long id) {
         roomRepository.deleteById(id);
+    }
+
+    @Override
+    public Page<Room> getAllRooms(Pageable pageable) {
+        return roomRepository.findAll(pageable);
+    }
+
+    @Override
+    public Page<Room> searchRooms(String search, Pageable pageable) {
+        return roomRepository.findByNameContainingIgnoreCaseOrLocationContainingIgnoreCase(search, search, pageable);
     }
 }

@@ -14,7 +14,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
-@Component
+//@Component
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
@@ -32,8 +32,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String path = request.getServletPath();
 
         if (
-                path.equals("/api/auth/login") ||
-                        path.equals("/api/auth/register")
+                path.equals(path.equals("/login") || path.equals("/api/auth/login") || path.equals("/api/auth/register"))
         ) {
             filterChain.doFilter(request, response);
             return;
@@ -43,7 +42,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (authHeader == null ||
                 !authHeader.startsWith("Bearer ")) {
 
-            filterChain.doFilter(request, response);
+            response.sendRedirect("/login");
             return;
         }
 
@@ -72,6 +71,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                     SecurityContextHolder.getContext()
                             .setAuthentication(authToken);
+                    filterChain.doFilter(request, response);
+                    return;
+                } else {
+                    response.sendRedirect("/login");
+                    return;
                 }
             }
 

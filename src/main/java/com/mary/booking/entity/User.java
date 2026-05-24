@@ -1,5 +1,6 @@
 package com.mary.booking.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.mary.booking.enums.Role;
 import jakarta.persistence.*;
 import lombok.*;
@@ -40,6 +41,7 @@ public class User {
     private LocalDateTime createdAt;
 
     @OneToMany(mappedBy = "user")
+    @JsonIgnore
     private List<Booking> bookings;
 
     @PrePersist

@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{base :: head}"></head>
+<body>
+<div th:replace="~{base :: navbar}"></div>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-3 col-lg-2 sidebar p-3">
+            <div class="text-center mb-4">
+                <div class="avatar-circle bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center"
+                     style="width: 80px; height: 80px; font-size: 32px;">
+                    <span th:text="${#strings.substring(user.username, 0, 1)}">И</span>
+                </div>
+                <h5 class="mt-2" th:text="${user.username}">Иван Иванов</h5>
+                <p class="text-muted small" th:text="${user.email}">ivanov@example.com</p>
+                <span class="badge bg-secondary" th:text="${user.role}">Сотрудник</span>
+            </div>
+            <hr>
+            <div class="nav flex-column nav-pills">
+                <a class="nav-link active" href="#bookings" data-bs-toggle="pill">
+                    <i class="bi bi-calendar-check"></i> Мои бронирования
+                </a>
+                <a class="nav-link" href="#history" data-bs-toggle="pill">
+                    <i class="bi bi-clock-history"></i> История
+                </a>
+                <hr>
+                <a class="nav-link text-danger" href="/logout">
+                    <i class="bi bi-box-arrow-right"></i> Выйти
+                </a>
+            </div>
+        </div>
+        <div class="col-md-9 col-lg-10 p-4">
+            <div class="tab-content">
+                <div class="tab-pane fade show active" id="bookings">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h3><i class="bi bi-calendar-check"></i> Мои бронирования</h3>
+                        <a href="/rooms" class="btn btn-primary">
+                            <i class="bi bi-plus-lg"></i> Новая встреча
+                        </a>
+                    </div>
+
+                    <div th:if="${#lists.isEmpty(activeBookings)}" class="alert alert-info">
+                        У вас нет активных бронирований
+                    </div>
+
+                    <div class="table-responsive" th:if="${!#lists.isEmpty(activeBookings)}">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                            <tr>
+                                <th>Дата и время</th>
+                                <th>Комната</th>
+                                <th>Название</th>
+                                <th>Статус</th>
+                                <th>Действия</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="booking : ${activeBookings}">
+                                <td>
+                                    <span th:text="${#temporals.format(booking.startTime, 'dd.MM.yyyy HH:mm')}"></span><br>
+                                    <small class="text-muted">до <span th:text="${#temporals.format(booking.endTime, 'HH:mm')}"></span></small>
+                                </td>
+                                <td th:text="${booking.roomName}">Комната</td>
+                                <td th:text="${booking.title}">Название встречи</td>
+                                <td>
+                                    <span th:if="${booking.status == 'ACTIVE'}" class="badge bg-success">Активно</span>
+                                    <span th:if="${booking.status == 'PENDING'}" class="badge bg-warning">Ожидает</span>
+                                    <span th:if="${booking.status == 'CONFIRMED'}" class="badge bg-info">Подтверждено</span>
+                                    <span th:if="${booking.status == 'CANCELLED'}" class="badge bg-danger">Отменено</span>
+                                    <span th:if="${booking.status == 'COMPLETED'}" class="badge bg-secondary">Завершено</span>
+                                </td>
+                                <td>
+                                    <a th:href="@{/bookings/edit/{id}(id=${booking.id})}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <form th:action="@{/bookings/{id}/cancel(id=${booking.id})}" method="post" class="d-inline">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Отменить бронирование?')">
+                                            <i class="bi bi-x-lg"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="tab-pane fade" id="history">
+                    <h3 class="mb-4"><i class="bi bi-clock-history"></i> История бронирований</h3>
+
+                    <div th:if="${#lists.isEmpty(historyBookings)}" class="alert alert-info">
+                        История пуста
+                    </div>
+
+                    <div class="table-responsive" th:if="${!#lists.isEmpty(historyBookings)}">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                            <tr>
+                                <th>Дата и время</th>
+                                <th>Комната</th>
+                                <th>Название</th>
+                                <th>Статус</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="booking : ${historyBookings}">
+                                <td>
+                                    <span th:text="${#temporals.format(booking.startTime, 'dd.MM.yyyy HH:mm')}"></span><br>
+                                    <small class="text-muted">до <span th:text="${#temporals.format(booking.endTime, 'HH:mm')}"></span></small>
+                                </td>
+                                <td th:text="${booking.roomName}">Комната</td>
+                                <td th:text="${booking.title}">Название встречи</td>
+                                <td>
+                                    <span th:if="${booking.status == 'COMPLETED'}" class="badge bg-success">Завершено</span>
+                                    <span th:if="${booking.status == 'CANCELLED'}" class="badge bg-danger">Отменено</span>
+                                    <span th:if="${booking.status == 'REJECTED'}" class="badge bg-danger">Отклонено</span>
+                                    <span th:if="${booking.status != 'COMPLETED' and booking.status != 'CANCELLED' and booking.status != 'REJECTED'}"
+                                          class="badge bg-secondary" th:text="${booking.status}">Статус</span>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div th:replace="~{base :: footer}"></div>
+</body>
+</html>

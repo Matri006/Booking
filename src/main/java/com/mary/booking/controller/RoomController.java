@@ -5,6 +5,7 @@ import com.mary.booking.entity.Room;
 import com.mary.booking.repository.RoomRepository;
 import com.mary.booking.service.RoomService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -27,6 +28,7 @@ public class RoomController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public Room createRoom(@RequestBody Room room) {
         return roomService.createRoom(room);
     }
@@ -39,6 +41,7 @@ public class RoomController {
         return roomService.updateRoom(id, room);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public void deleteRoom(@PathVariable Long id) {
         roomService.deleteRoom(id);
