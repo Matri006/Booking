@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="ru">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.w3.org/1999/xhtml" lang="ru">
 <head th:fragment="head">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -81,6 +81,16 @@
                         <i class="bi bi-door-closed"></i> Комнаты
                     </a>
                 </li>
+                <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                    <a class="nav-link" href="/admin/users">
+                        <i class="bi bi-shield-lock"></i> Управление пользователями
+                    </a>
+                </li>
+                <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                    <a class="nav-link" href="/admin/rooms">
+                        <i class="bi bi-door-closed"></i> Управление комнатами
+                    </a>
+                </li>
                 <li class="nav-item">
                     <a class="nav-link" href="/user/dashboard">
                         <i class="bi bi-person"></i> Личный кабинет
@@ -103,6 +113,9 @@
     <div class="container">
         <small>© 2026 Система бронирования переговорных комнат</small>
     </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

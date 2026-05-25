@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{base :: head}"></head>
+
+<body>
+
+<div th:replace="~{base :: navbar}"></div>
+
+<div class="container mt-4">
+
+    <h2>Создание комнаты</h2>
+
+    <form th:action="@{/admin/rooms/create}"
+          th:object="${room}"
+          method="post">
+
+        <div class="mb-3">
+            <label>Название</label>
+            <input class="form-control" th:field="*{name}">
+        </div>
+
+        <div class="mb-3">
+            <label>Вместимость</label>
+            <input type="number" class="form-control" th:field="*{capacity}">
+        </div>
+
+        <div class="mb-3">
+            <label>Локация</label>
+            <input class="form-control" th:field="*{location}">
+        </div>
+
+        <button class="btn btn-success">Создать</button>
+    </form>
+
+</div>
+
+<div th:replace="~{base :: footer}"></div>
+
+</body>
+</html>

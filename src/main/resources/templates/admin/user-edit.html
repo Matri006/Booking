@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{base :: head}"></head>
+
+<body>
+
+<div th:replace="~{base :: navbar}"></div>
+
+<div class="container mt-4">
+
+    <h2><i class="bi bi-person-gear"></i> Редактирование пользователя</h2>
+
+    <form th:action="@{/admin/users/edit/{id}(id=${user.id})}"
+          th:object="${user}"
+          method="post"
+          class="mt-3">
+
+        <input type="hidden" th:field="*{id}"/>
+
+        <div class="mb-3">
+            <label class="form-label">Имя пользователя</label>
+            <input class="form-control" th:field="*{username}" required>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Email</label>
+            <input class="form-control" th:field="*{email}" type="email" required>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Роль</label>
+            <select class="form-select" th:field="*{role}">
+                <option th:value="USER">USER</option>
+                <option th:value="ADMIN">ADMIN</option>
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Новый пароль (если нужно изменить)</label>
+            <input class="form-control"
+                   type="password"
+                   name="newPassword"
+                   placeholder="Оставь пустым, если не менять">
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Активен</label>
+            <select class="form-select" th:field="*{enabled}">
+                <option th:value="true">Да</option>
+                <option th:value="false">Нет</option>
+            </select>
+        </div>
+
+        <hr>
+
+        <button type="submit" class="btn btn-primary">
+            Сохранить
+        </button>
+
+        <a href="/admin/users" class="btn btn-secondary">
+            Назад
+        </a>
+
+    </form>
+
+</div>
+
+<div th:replace="~{base :: footer}"></div>
+
+</body>
+</html>

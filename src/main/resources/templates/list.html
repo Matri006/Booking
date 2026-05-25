@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.w3.org/1999/xhtml">
 <head th:replace="~{base :: head}"></head>
 <body>
 <div th:replace="~{base :: navbar}"></div>
@@ -56,6 +56,12 @@
                             <i class="bi bi-calendar-plus"></i> Забронировать
                         </a>
                     </div>
+                    <div sec:authorize="hasRole('ADMIN')" class="mt-2">
+                        <button class="btn btn-danger btn-sm w-100"
+                                onclick="deleteRoom(${room.id}, '${room.name}')">
+                            <i class="bi bi-trash"></i> Удалить комнату
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -78,5 +84,23 @@
 </div>
 
 <div th:replace="~{base :: footer}"></div>
+<script>
+    function deleteRoom(id, name) {
+        if(confirm('Удалить комнату "' + name + '"? Все бронирования этой комнаты также будут удалены.')) {
+            fetch('/api/rooms/' + id, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': 'Bearer ' + localStorage.getItem('token')
+                }
+            }).then(response => {
+                if(response.ok) {
+                    location.reload();
+                } else {
+                    alert('Ошибка при удалении');
+                }
+            });
+        }
+    }
+</script>
 </body>
 </html>

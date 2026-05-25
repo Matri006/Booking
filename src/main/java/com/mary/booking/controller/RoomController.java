@@ -34,6 +34,7 @@ public class RoomController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public Room updateRoom(
             @PathVariable Long id,
             @RequestBody Room room
