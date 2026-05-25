@@ -2,6 +2,7 @@ package com.mary.booking.service;
 
 import com.mary.booking.dto.auth.BookingRequest;
 import com.mary.booking.dto.auth.BookingResponse;
+import com.mary.booking.dto.auth.BookingUpdateRequest;
 import com.mary.booking.entity.Booking;
 
 import java.time.LocalDate;
@@ -21,4 +22,8 @@ public interface BookingService {
     List<BookingResponse> getMyBookingHistory(String email);
 
     List<LocalTime> getAvailableTimeSlots(Long roomId, LocalDate date);
+
+    Booking getBookingById(Long id);
+
+    Booking updateBooking(Long id, BookingUpdateRequest booking);
 }

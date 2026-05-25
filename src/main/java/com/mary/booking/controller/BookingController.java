@@ -7,6 +7,7 @@ import com.mary.booking.service.BookingService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
+import org.springframework.ui.Model;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -54,5 +55,4 @@ public class BookingController {
                 authentication.getName()
         );
     }
-
 }

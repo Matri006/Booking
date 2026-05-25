@@ -9,11 +9,13 @@
 <div class="container-fluid">
     <div class="row">
         <div class="col-md-3 col-lg-2 sidebar p-3">
+
             <div class="text-center mb-4">
                 <div class="avatar-circle bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center"
                      style="width:80px;height:80px;font-size:32px;">
-                    <span th:text="${#strings.substring(user.username,0,1)}">И</span>
+                    <span th:text="${#strings.substring(user.username,0,1)}">U</span>
                 </div>
+
                 <h5 class="mt-2" th:text="${user.username}">User</h5>
                 <p class="text-muted small" th:text="${user.email}">email</p>
                 <span class="badge bg-secondary" th:text="${user.role}">USER</span>
@@ -25,6 +27,7 @@
                 <a class="nav-link active" href="#bookings" data-bs-toggle="pill">
                     <i class="bi bi-calendar-check"></i> Мои бронирования
                 </a>
+
                 <a class="nav-link" href="#history" data-bs-toggle="pill">
                     <i class="bi bi-clock-history"></i> История
                 </a>
@@ -36,16 +39,16 @@
                         <i class="bi bi-box-arrow-right"></i> Выйти
                     </button>
                 </form>
-
             </div>
         </div>
         <div class="col-md-9 col-lg-10 p-4">
+
             <div class="tab-content">
                 <div class="tab-pane fade show active" id="bookings">
+
                     <div class="d-flex justify-content-between align-items-center mb-4">
-                        <h3>
-                            <i class="bi bi-calendar-check"></i> Мои бронирования
-                        </h3>
+                        <h3><i class="bi bi-calendar-check"></i> Мои бронирования</h3>
+
                         <a href="/rooms" class="btn btn-primary">
                             <i class="bi bi-plus-lg"></i> Новая встреча
                         </a>
@@ -57,6 +60,7 @@
 
                     <div th:if="${!#lists.isEmpty(activeBookings)}" class="table-responsive">
                         <table class="table table-hover">
+
                             <thead class="table-light">
                             <tr>
                                 <th>Дата</th>
@@ -69,6 +73,7 @@
 
                             <tbody>
                             <tr th:each="booking : ${activeBookings}">
+
                                 <td>
                                     <span th:text="${#temporals.format(booking.startTime,'dd.MM.yyyy HH:mm')}"></span><br>
                                     <small class="text-muted">
@@ -93,15 +98,27 @@
                                           th:if="${booking.status == 'CANCELLED'}">Отменено</span>
                                 </td>
 
-                                <td>
+                                <td class="d-flex gap-2">
                                     <a th:href="@{/bookings/edit/{id}(id=${booking.id})}"
                                        class="btn btn-sm btn-outline-primary">
                                         <i class="bi bi-pencil"></i>
                                     </a>
+                                    <form th:action="@{/bookings/cancel/{id}(id=${booking.id})}"
+                                          method="post"
+                                          onsubmit="return confirm('Отменить бронирование?');">
+
+                                        <button type="submit"
+                                                class="btn btn-sm btn-outline-danger">
+                                            <i class="bi bi-x-circle"></i>
+                                        </button>
+
+                                    </form>
+
                                 </td>
 
                             </tr>
                             </tbody>
+
                         </table>
                     </div>
                 </div>
@@ -116,7 +133,9 @@
                     </div>
 
                     <div th:if="${!#lists.isEmpty(historyBookings)}" class="table-responsive">
+
                         <table class="table table-hover">
+
                             <thead class="table-light">
                             <tr>
                                 <th>Дата</th>
@@ -136,6 +155,7 @@
                             </tbody>
 
                         </table>
+
                     </div>
 
                 </div>

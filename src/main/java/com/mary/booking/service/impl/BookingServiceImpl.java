@@ -2,6 +2,7 @@ package com.mary.booking.service.impl;
 
 import com.mary.booking.dto.auth.BookingRequest;
 import com.mary.booking.dto.auth.BookingResponse;
+import com.mary.booking.dto.auth.BookingUpdateRequest;
 import com.mary.booking.entity.Booking;
 import com.mary.booking.entity.Room;
 import com.mary.booking.entity.User;
@@ -143,6 +144,22 @@ public class BookingServiceImpl implements BookingService {
             start = start.plusHours(1);
         }
         return availableSlots;
+    }
+
+    @Override
+    public Booking getBookingById(Long id) {
+        return bookingRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Booking not found: " + id));
+    }
+
+    @Override
+    public Booking updateBooking(Long id, BookingUpdateRequest request) {
+        Booking existing = bookingRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Booking not found"));
+        existing.setTitle(request.getTitle());
+        existing.setStartTime(request.getStartTime());
+        existing.setEndTime(request.getEndTime());
+        return bookingRepository.save(existing);
     }
 
     private BookingResponse mapToResponse(Booking booking) {
