@@ -38,4 +38,45 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     List<Booking> findByRoomAndStartTimeDate(@Param("room") Room room, @Param("dateTime") LocalDateTime dateTime);
 
     List<Booking> findByRoomAndStartTimeBetween(Room room, LocalDateTime startOfDay, LocalDateTime endOfDay);
+
+    @Query("SELECT b FROM Booking b WHERE b.room.id = :roomId AND b.status != 'CANCELLED' AND ((b.startTime < :endTime AND b.endTime > :startTime))")
+    List<Booking> findConflictingBookings(@Param("roomId") Long roomId,
+                                          @Param("startTime") LocalDateTime startTime,
+                                          @Param("endTime") LocalDateTime endTime);
+
+    @Query("""
+SELECT b FROM Booking b
+WHERE b.room.id = :roomId
+AND b.status <> 'CANCELLED'
+AND b.startTime < :end
+AND b.endTime > :start
+""")
+    List<Booking> findBookingsByRoomAndRange(
+            @Param("roomId") Long roomId,
+            @Param("start") LocalDateTime start,
+            @Param("end") LocalDateTime end
+    );
+
+    List<Booking> findByUserId(Long userId);
+
+    @Query("SELECT b FROM Booking b WHERE b.room.id = :roomId " +
+            "AND b.status = com.mary.booking.enums.BookingStatus.ACTIVE " +
+            "AND b.startTime < :endOfDay " +
+            "AND b.endTime > :startOfDay")
+    List<Booking> findActiveBookingsByRoomAndDate(
+            @Param("roomId") Long roomId,
+            @Param("startOfDay") LocalDateTime startOfDay,
+            @Param("endOfDay") LocalDateTime endOfDay
+    );
+
+    @Query("SELECT COUNT(b) > 0 FROM Booking b WHERE b.room.id = :roomId " +
+            "AND b.status = com.mary.booking.enums.BookingStatus.ACTIVE " +
+            "AND b.startTime < :endTime " +
+            "AND b.endTime > :startTime")
+    boolean existsConflictingBooking(
+            @Param("roomId") Long roomId,
+            @Param("startTime") LocalDateTime startTime,
+            @Param("endTime") LocalDateTime endTime
+    );
+
 }

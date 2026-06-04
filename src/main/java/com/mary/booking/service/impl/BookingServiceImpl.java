@@ -11,6 +11,7 @@ import com.mary.booking.repository.BookingRepository;
 import com.mary.booking.repository.RoomRepository;
 import com.mary.booking.repository.UserRepository;
 import com.mary.booking.service.BookingService;
+import com.mary.booking.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -26,47 +27,11 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class BookingServiceImpl implements BookingService {
+
     private final BookingRepository bookingRepository;
     private final RoomRepository roomRepository;
     private final UserRepository userRepository;
-
-    @Override
-    public BookingResponse createBooking(BookingRequest request) {
-        if (request.getEndTime().isBefore(request.getStartTime()) ||
-                request.getEndTime().isEqual(request.getStartTime())) {
-            throw new RuntimeException("End time must be after start time");
-        }
-
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String email = authentication.getName();
-
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        Room room = roomRepository.findById(request.getRoomId())
-                .orElseThrow(() -> new RuntimeException("Room not found"));
-
-        boolean exists = bookingRepository.existsByRoomIdAndStartTimeLessThanAndEndTimeGreaterThan(
-                room.getId(),
-                request.getEndTime(),
-                request.getStartTime()
-        );
-
-        if (exists) {
-            throw new RuntimeException("Room already booked for this time");
-        }
-
-        Booking booking = Booking.builder()
-                .title(request.getTitle())
-                .startTime(request.getStartTime())
-                .endTime(request.getEndTime())
-                .room(room)
-                .user(user)
-                .status(BookingStatus.ACTIVE)
-                .build();
-
-        return mapToResponse(bookingRepository.save(booking));
-    }
+    private final NotificationService notificationService;
 
     @Override
     public List<BookingResponse> getAllBookings() {
@@ -80,10 +45,11 @@ public class BookingServiceImpl implements BookingService {
     public List<BookingResponse> getMyBookings(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
+
         return bookingRepository.findByUser(user)
                 .stream()
-                .filter(booking -> booking.getStatus() != BookingStatus.CANCELLED)
-                .filter(booking -> booking.getStartTime().isAfter(LocalDateTime.now()))
+                .filter(b -> b.getStatus() != BookingStatus.CANCELLED)
+                .filter(b -> b.getStartTime().isAfter(LocalDateTime.now()))
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
@@ -99,51 +65,21 @@ public class BookingServiceImpl implements BookingService {
 
         booking.setStatus(BookingStatus.CANCELLED);
         bookingRepository.save(booking);
+
+        notificationService.createCancellationNotification(booking);
     }
 
     @Override
     public List<BookingResponse> getMyBookingHistory(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
+
         return bookingRepository.findByUser(user)
                 .stream()
-                .filter(booking -> booking.getStartTime().isBefore(LocalDateTime.now())
-                        || booking.getStatus() == BookingStatus.CANCELLED)
+                .filter(b -> b.getStartTime().isBefore(LocalDateTime.now())
+                        || b.getStatus() == BookingStatus.CANCELLED)
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
-    }
-
-    @Override
-    public List<LocalTime> getAvailableTimeSlots(Long roomId, LocalDate date) {
-        Room room = roomRepository.findById(roomId)
-                .orElseThrow(() -> new RuntimeException("Room not found"));
-        LocalDateTime startOfDay = date.atStartOfDay();
-        LocalDateTime endOfDay = date.atTime(23, 59, 59);
-        List<Booking> bookings = bookingRepository.findAll()
-                .stream()
-                .filter(b -> b.getRoom().getId().equals(roomId))
-                .filter(b -> b.getStartTime().isAfter(startOfDay) && b.getStartTime().isBefore(endOfDay))
-                .filter(b -> b.getStatus() != BookingStatus.CANCELLED)
-                .collect(Collectors.toList());
-        List<LocalTime> availableSlots = new ArrayList<>();
-        LocalTime start = LocalTime.of(9, 0);
-        LocalTime end = LocalTime.of(20, 0);
-
-        while (start.isBefore(end)) {
-            final LocalTime slot = start;
-            LocalDateTime slotStart = date.atTime(slot);
-            LocalDateTime slotEnd = date.atTime(slot.plusHours(1));
-
-            boolean isBooked = bookings.stream().anyMatch(booking ->
-                    (slotStart.isBefore(booking.getEndTime()) && slotEnd.isAfter(booking.getStartTime()))
-            );
-
-            if (!isBooked) {
-                availableSlots.add(slot);
-            }
-            start = start.plusHours(1);
-        }
-        return availableSlots;
     }
 
     @Override
@@ -154,15 +90,67 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     public Booking updateBooking(Long id, BookingUpdateRequest request) {
-        Booking existing = bookingRepository.findById(id)
+        Booking booking = bookingRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Booking not found"));
-        existing.setTitle(request.getTitle());
-        existing.setStartTime(request.getStartTime());
-        existing.setEndTime(request.getEndTime());
-        return bookingRepository.save(existing);
+
+        booking.setTitle(request.getTitle());
+        booking.setStartTime(request.getStartTime());
+        booking.setEndTime(request.getEndTime());
+
+        return bookingRepository.save(booking);
+    }
+
+    @Override
+    public BookingResponse createBooking(BookingRequest request) {
+
+        if (!request.getEndTime().isAfter(request.getStartTime())) {
+            throw new RuntimeException("End time must be after start time");
+        }
+
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        Room room = roomRepository.findById(request.getRoomId())
+                .orElseThrow(() -> new RuntimeException("Room not found"));
+
+        boolean hasConflict = bookingRepository.existsConflictingBooking(
+                room.getId(),
+                request.getStartTime(),
+                request.getEndTime()
+        );
+
+        if (hasConflict) {
+            throw new RuntimeException("Room already booked for this time");
+        }
+
+        Booking booking = Booking.builder()
+                .title(request.getTitle())
+                .startTime(request.getStartTime())
+                .endTime(request.getEndTime())
+                .room(room)
+                .user(user)
+                .status(BookingStatus.ACTIVE)
+                .build();
+
+        Booking saved = bookingRepository.save(booking);
+
+        notificationService.createBookingNotification(saved);
+
+        return mapToResponse(saved);
     }
 
     private BookingResponse mapToResponse(Booking booking) {
+        String displayStatus;
+        if (booking.getStatus() == BookingStatus.CANCELLED) {
+            displayStatus = "CANCELLED";
+        } else if (booking.getEndTime().isBefore(LocalDateTime.now())) {
+            displayStatus = "COMPLETED";
+        } else {
+            displayStatus = "ACTIVE";
+        }
+
         return BookingResponse.builder()
                 .id(booking.getId())
                 .roomName(booking.getRoom().getName())
@@ -170,7 +158,12 @@ public class BookingServiceImpl implements BookingService {
                 .startTime(booking.getStartTime())
                 .endTime(booking.getEndTime())
                 .status(booking.getStatus())
+                .displayStatus(displayStatus)
                 .username(booking.getUser().getUsername())
                 .build();
+    }
+    @Override
+    public List<LocalTime> getAvailableTimeSlots(Long roomId, LocalDate date) { //todo удалить из интерфейса
+        return new ArrayList<>();
     }
 }

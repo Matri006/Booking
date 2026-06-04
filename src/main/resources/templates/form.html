@@ -19,11 +19,14 @@
                     <h4 class="mb-0"><i class="bi bi-calendar-plus"></i> Новая встреча</h4>
                 </div>
                 <div class="card-body">
-                    <form th:action="@{/bookings/create}" th:object="${booking}" method="post">
+                    <div th:if="${quickRoom}" class="alert alert-info">
+                        <i class="bi bi-info-circle"></i> Быстрое бронирование: комната выбрана
+                    </div>
+                    <form th:action="@{/bookings/create}" th:object="${booking}" method="post" id="bookingForm">
                         <div th:if="${error}" class="alert alert-danger" th:text="${error}">Ошибка</div>
                         <div class="mb-3">
                             <label class="form-label">Комната *</label>
-                            <select th:field="*{roomId}" class="form-select" required>
+                            <select th:field="*{roomId}" class="form-select" id="roomSelect" required>
                                 <option value="">Выберите комнату</option>
                                 <option th:each="room : ${rooms}"
                                         th:value="${room.id}"
@@ -39,11 +42,11 @@
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Дата и время начала *</label>
-                            <input type="datetime-local" th:field="*{startTime}" class="form-control" required>
+                            <input type="datetime-local" th:field="*{startTime}" class="form-control" id="startTime" required>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Дата и время окончания *</label>
-                            <input type="datetime-local" th:field="*{endTime}" class="form-control" required>
+                            <input type="datetime-local" th:field="*{endTime}" class="form-control" id="endTime" required>
                         </div>
                         <hr>
                         <div class="d-flex justify-content-between">
@@ -66,10 +69,31 @@
         document.getElementById('charCount').innerText = this.value.length;
     });
 
-
     document.addEventListener('DOMContentLoaded', function() {
         if (document.querySelector('[name="title"]')) {
             document.getElementById('charCount').innerText = document.querySelector('[name="title"]').value.length;
+        }
+        const quickRoomId = localStorage.getItem('quickRoomId');
+        const quickStartTime = localStorage.getItem('quickStartTime');
+        const quickEndTime = localStorage.getItem('quickEndTime');
+
+        if (quickRoomId && document.getElementById('roomSelect')) {
+            document.getElementById('roomSelect').value = quickRoomId;
+            localStorage.removeItem('quickRoomId');
+        }
+
+        if (quickStartTime && document.getElementById('startTime')) {
+            const startDate = new Date(quickStartTime);
+            const formattedStart = startDate.toISOString().slice(0, 16);
+            document.getElementById('startTime').value = formattedStart;
+            localStorage.removeItem('quickStartTime');
+        }
+
+        if (quickEndTime && document.getElementById('endTime')) {
+            const endDate = new Date(quickEndTime);
+            const formattedEnd = endDate.toISOString().slice(0, 16);
+            document.getElementById('endTime').value = formattedEnd;
+            localStorage.removeItem('quickEndTime');
         }
     });
 </script>

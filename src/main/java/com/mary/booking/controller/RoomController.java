@@ -5,9 +5,11 @@ import com.mary.booking.entity.Room;
 import com.mary.booking.repository.RoomRepository;
 import com.mary.booking.service.RoomService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -46,5 +48,16 @@ public class RoomController {
     @DeleteMapping("/{id}")
     public void deleteRoom(@PathVariable Long id) {
         roomService.deleteRoom(id);
+    }
+
+    @GetMapping("/{id}/status")
+    public RoomResponse getRoomStatus(
+            @PathVariable Long id,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
+    ) {
+        if (date == null) {
+            date = LocalDate.now();
+        }
+        return roomService.getRoomStatus(id, date);
     }
 }

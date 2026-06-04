@@ -26,4 +26,6 @@ public class BookingResponse {
     private String roomName;
 
     private String username;
+
+    private String displayStatus;
 }
