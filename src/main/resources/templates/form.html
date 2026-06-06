@@ -4,56 +4,80 @@
 <body>
 <div th:replace="~{base :: navbar}"></div>
 
-<div class="container mt-4">
-    <div class="row">
-        <div class="col-md-8 mx-auto">
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="/rooms">Список комнат</a></li>
-                    <li class="breadcrumb-item active">Новая встреча</li>
+<div class="container mt-4 pb-5">
+    <div class="row justify-content-center">
+        <div class="col-md-7 col-lg-6">
+
+            <nav aria-label="breadcrumb" class="mb-3">
+                <ol class="breadcrumb-custom">
+                    <li><a href="/rooms">Комнаты</a></li>
+                    <li><i class="bi bi-chevron-right"></i></li>
+                    <li class="active">Новая встреча</li>
                 </ol>
             </nav>
 
-            <div class="card shadow">
-                <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0"><i class="bi bi-calendar-plus"></i> Новая встреча</h4>
-                </div>
-                <div class="card-body">
-                    <div th:if="${quickRoom}" class="alert alert-info">
-                        <i class="bi bi-info-circle"></i> Быстрое бронирование: комната выбрана
+            <div class="card">
+                <div class="card-body p-4">
+                    <div class="form-icon-header mb-4">
+                        <div class="form-icon-circle">
+                            <i class="bi bi-calendar-plus"></i>
+                        </div>
+                        <div>
+                            <h4 class="mb-0 fw-bold" style="letter-spacing:-0.3px;">Новая встреча</h4>
+                            <p class="text-muted mb-0" style="font-size:12.5px;">
+                                Заполните детали бронирования
+                            </p>
+                        </div>
                     </div>
-                    <form th:action="@{/bookings/create}" th:object="${booking}" method="post" id="bookingForm">
-                        <div th:if="${error}" class="alert alert-danger" th:text="${error}">Ошибка</div>
+
+                    <form th:action="@{/bookings/create}"
+                          th:object="${booking}"
+                          method="post"
+                          id="bookingForm">
+
+                        <div th:if="${error}" class="alert alert-danger mb-3" th:text="${error}"></div>
+
                         <div class="mb-3">
-                            <label class="form-label">Комната *</label>
+                            <label class="form-label">Переговорная *</label>
                             <select th:field="*{roomId}" class="form-select" id="roomSelect" required>
-                                <option value="">Выберите комнату</option>
+                                <option value="">Выберите комнату...</option>
                                 <option th:each="room : ${rooms}"
                                         th:value="${room.id}"
-                                        th:text="${room.name + ' (вместимость: ' + room.capacity + ' чел.)'}">
+                                        th:text="${room.name + ' · ' + room.capacity + ' чел.'}">
                                 </option>
                             </select>
                         </div>
+
                         <div class="mb-3">
-                            <label class="form-label">Тема встречи *</label>
-                            <textarea th:field="*{title}" class="form-control" rows="2"
-                                      maxlength="200" placeholder="Введите тему встречи (до 200 символов)"></textarea>
-                            <small class="text-muted"><span id="charCount">0</span>/200</small>
+                            <label class="form-label">
+                                Тема встречи *
+                                <span id="charCount" style="font-weight:400; color: var(--text-muted);">
+                                    0 / 200
+                                </span>
+                            </label>
+                            <textarea th:field="*{title}" class="form-control"
+                                      rows="2" maxlength="200"
+                                      placeholder="О чём встреча?"></textarea>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label">Дата и время начала *</label>
-                            <input type="datetime-local" th:field="*{startTime}" class="form-control" id="startTime" required>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label">Начало *</label>
+                                <input type="datetime-local" th:field="*{startTime}"
+                                       class="form-control" id="startTime" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Конец *</label>
+                                <input type="datetime-local" th:field="*{endTime}"
+                                       class="form-control" id="endTime" required>
+                            </div>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label">Дата и время окончания *</label>
-                            <input type="datetime-local" th:field="*{endTime}" class="form-control" id="endTime" required>
-                        </div>
-                        <hr>
-                        <div class="d-flex justify-content-between">
+
+                        <div class="d-flex justify-content-between gap-2">
                             <a href="/rooms" class="btn btn-secondary">
-                                <i class="bi bi-arrow-left"></i> Отмена
+                                <i class="bi bi-arrow-left"></i> Назад
                             </a>
-                            <button type="submit" class="btn btn-primary">
+                            <button type="submit" class="btn btn-primary flex-fill">
                                 <i class="bi bi-check-lg"></i> Забронировать
                             </button>
                         </div>
@@ -64,40 +88,52 @@
     </div>
 </div>
 
+<div th:replace="~{base :: footer}"></div>
+
+<style>
+    .breadcrumb-custom { display: flex; align-items: center; gap: 6px; list-style: none; padding: 0; margin: 0; font-size: 13px; }
+    .breadcrumb-custom a { color: var(--text-secondary); text-decoration: none; }
+    .breadcrumb-custom a:hover { color: var(--text-primary); }
+    .breadcrumb-custom .active { color: var(--text-primary); font-weight: 500; }
+    .breadcrumb-custom i { color: var(--text-muted); font-size: 11px; }
+    .form-icon-header { display: flex; align-items: center; gap: 14px; }
+    .form-icon-circle { width: 48px; height: 48px; background: var(--primary-light); border-radius: 13px; display: flex; align-items: center; justify-content: center; color: var(--primary); font-size: 22px; flex-shrink: 0; }
+</style>
+
 <script>
-    document.querySelector('[name="title"]')?.addEventListener('input', function() {
-        document.getElementById('charCount').innerText = this.value.length;
-    });
+    const titleArea = document.querySelector('[name="title"]');
+    const charCount = document.getElementById('charCount');
 
-    document.addEventListener('DOMContentLoaded', function() {
-        if (document.querySelector('[name="title"]')) {
-            document.getElementById('charCount').innerText = document.querySelector('[name="title"]').value.length;
-        }
-        const quickRoomId = localStorage.getItem('quickRoomId');
-        const quickStartTime = localStorage.getItem('quickStartTime');
-        const quickEndTime = localStorage.getItem('quickEndTime');
+    function updateCount() {
+        const len = titleArea?.value.length || 0;
+        if (charCount) charCount.textContent = `${len} / 200`;
+        if (len > 180) charCount.style.color = 'var(--danger)';
+        else charCount.style.color = 'var(--text-muted)';
+    }
 
-        if (quickRoomId && document.getElementById('roomSelect')) {
-            document.getElementById('roomSelect').value = quickRoomId;
+    titleArea?.addEventListener('input', updateCount);
+
+    document.addEventListener('DOMContentLoaded', () => {
+        updateCount();
+        const qRoom = localStorage.getItem('quickRoomId');
+        const qStart = localStorage.getItem('quickStartTime');
+        const qEnd = localStorage.getItem('quickEndTime');
+
+        if (qRoom && document.getElementById('roomSelect')) {
+            document.getElementById('roomSelect').value = qRoom;
             localStorage.removeItem('quickRoomId');
         }
-
-        if (quickStartTime && document.getElementById('startTime')) {
-            const startDate = new Date(quickStartTime);
-            const formattedStart = startDate.toISOString().slice(0, 16);
-            document.getElementById('startTime').value = formattedStart;
+        if (qStart && document.getElementById('startTime')) {
+            document.getElementById('startTime').value =
+                new Date(qStart).toISOString().slice(0, 16);
             localStorage.removeItem('quickStartTime');
         }
-
-        if (quickEndTime && document.getElementById('endTime')) {
-            const endDate = new Date(quickEndTime);
-            const formattedEnd = endDate.toISOString().slice(0, 16);
-            document.getElementById('endTime').value = formattedEnd;
+        if (qEnd && document.getElementById('endTime')) {
+            document.getElementById('endTime').value =
+                new Date(qEnd).toISOString().slice(0, 16);
             localStorage.removeItem('quickEndTime');
         }
     });
 </script>
-
-<div th:replace="~{base :: footer}"></div>
 </body>
 </html>

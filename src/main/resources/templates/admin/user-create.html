@@ -1,53 +1,76 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{base :: head}"></head>
-
 <body>
-
 <div th:replace="~{base :: navbar}"></div>
 
-<div class="container mt-4">
+<div class="container mt-4 pb-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <a href="/admin/users" class="back-link mb-4 d-inline-flex align-items-center gap-2">
+                <i class="bi bi-arrow-left"></i> Назад
+            </a>
 
-    <h2><i class="bi bi-person-plus"></i> Создать пользователя</h2>
+            <div class="card">
+                <div class="card-body p-4">
+                    <div class="form-icon-header mb-4">
+                        <div class="form-icon-circle">
+                            <i class="bi bi-person-plus"></i>
+                        </div>
+                        <div>
+                            <h4 class="mb-0 fw-bold" style="letter-spacing:-0.3px;">Новый пользователь</h4>
+                            <p class="text-muted mb-0" style="font-size:12.5px;">Создание учётной записи</p>
+                        </div>
+                    </div>
 
-    <form th:action="@{/admin/users/create}" method="post">
+                    <form th:action="@{/admin/users/create}" method="post">
+                        <div class="mb-3">
+                            <label class="form-label">Имя пользователя</label>
+                            <input class="form-control" name="username"
+                                   placeholder="ivan.ivanov" required>
+                        </div>
 
-        <div class="mb-3">
-            <label class="form-label">Имя</label>
-            <input class="form-control" name="username" required>
+                        <div class="mb-3">
+                            <label class="form-label">Email</label>
+                            <input class="form-control" name="email" type="email"
+                                   placeholder="ivan@company.ru" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Пароль</label>
+                            <div class="input-group-custom">
+                                <i class="bi bi-lock input-group-icon"></i>
+                                <input type="password" class="form-control ps-5"
+                                       name="password" placeholder="Не менее 8 символов" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label">Роль</label>
+                            <select class="form-select" name="role">
+                                <option value="USER">Сотрудник (USER)</option>
+                                <option value="ADMIN">Администратор (ADMIN)</option>
+                            </select>
+                        </div>
+
+                        <button type="submit" class="btn btn-success w-100">
+                            <i class="bi bi-check-lg"></i> Создать пользователя
+                        </button>
+                    </form>
+                </div>
+            </div>
         </div>
-
-        <div class="mb-3">
-            <label class="form-label">Email</label>
-            <input class="form-control" name="email" required>
-        </div>
-
-        <div class="mb-3">
-            <label class="form-label">Пароль</label>
-            <input type="password" class="form-control" name="password" required>
-        </div>
-
-        <div class="mb-3">
-            <label class="form-label">Роль</label>
-            <select class="form-control" name="role">
-                <option value="USER">USER</option>
-                <option value="ADMIN">ADMIN</option>
-            </select>
-        </div>
-
-        <button class="btn btn-success">
-            Создать
-        </button>
-
-        <a href="/admin/users" class="btn btn-secondary">
-            Назад
-        </a>
-
-    </form>
-
+    </div>
 </div>
 
 <div th:replace="~{base :: footer}"></div>
-
+<style>
+    .back-link { color: var(--text-secondary); text-decoration: none; font-size: 13.5px; font-weight: 500; transition: color .15s; }
+    .back-link:hover { color: var(--text-primary); }
+    .form-icon-header { display: flex; align-items: center; gap: 14px; }
+    .form-icon-circle { width: 48px; height: 48px; background: var(--primary-light); border-radius: 13px; display: flex; align-items: center; justify-content: center; color: var(--primary); font-size: 22px; flex-shrink: 0; }
+    .input-group-custom { position: relative; }
+    .input-group-icon { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 14px; pointer-events: none; }
+</style>
 </body>
 </html>

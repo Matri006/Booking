@@ -4,181 +4,385 @@
 <body>
 <div th:replace="~{base :: navbar}"></div>
 
-<div class="page-wrapper">
-    <div class="container mt-4">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2><i class="bi bi-door-closed"></i> Доступные переговорные комнаты</h2>
-            <a href="/bookings/new" class="btn btn-primary">
-                <i class="bi bi-plus-lg"></i> Новая встреча
-            </a>
-        </div>
-        <div class="card mb-4">
-            <div class="card-body">
-                <h5 class="card-title"><i class="bi bi-funnel"></i> Поиск свободных комнат</h5>
-                <div class="row g-3">
-                    <div class="col-md-3">
-                        <label class="form-label">Дата</label>
-                        <input type="date" id="dateFilter" class="form-control"
-                               th:value="${#temporals.format(selectedDate, 'yyyy-MM-dd')}">
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label">Время начала</label>
-                        <input type="time" id="startTimeFilter" class="form-control" value="10:00">
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label">Время окончания</label>
-                        <input type="time" id="endTimeFilter" class="form-control" value="11:00">
-                    </div>
-                    <div class="col-md-3 d-flex align-items-end">
-                        <button id="checkAvailabilityBtn" class="btn btn-primary w-100">
-                            <i class="bi bi-search"></i> Найти свободные
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="row mb-3">
-            <div class="col-md-4">
-                <div class="card bg-success bg-opacity-10">
-                    <div class="card-body text-center py-2">
-                        <i class="bi bi-check-circle-fill text-success"></i>
-                        <span id="freeCount">0</span> свободно сейчас
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card bg-warning bg-opacity-10">
-                    <div class="card-body text-center py-2">
-                        <i class="bi bi-clock-fill text-warning"></i>
-                        <span id="availableAtTime">0</span> свободно в выбранное время
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card bg-danger bg-opacity-10">
-                    <div class="card-body text-center py-2">
-                        <i class="bi bi-x-circle-fill text-danger"></i>
-                        <span id="busyCount">0</span> занято
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="row mb-4">
-            <div class="col-md-6 mx-auto">
-                <form method="get" action="/rooms" class="d-flex" id="searchForm">
-                    <input type="text"
-                           name="search"
-                           class="form-control me-2"
-                           placeholder="Поиск по названию или местоположению..."
-                           th:value="${search}">
-                    <input type="hidden" name="date" id="searchDate"
-                           th:value="${#temporals.format(selectedDate, 'yyyy-MM-dd')}">
-                    <button type="submit" class="btn btn-outline-primary">
-                        <i class="bi bi-search"></i> Найти
-                    </button>
-                    <a th:if="${search}" href="/rooms" class="btn btn-outline-secondary ms-2">
-                        <i class="bi bi-x-lg"></i> Сброс
-                    </a>
-                </form>
-            </div>
-        </div>
-        <div class="row" id="roomsContainer">
-            <div th:each="room : ${rooms.content}"
-                 class="col-md-6 col-lg-4 mb-4 d-flex"
-                 th:data-room-id="${room.id}"
-                 th:data-room-name="${room.name}">
-                <div class="card room-card w-100 shadow-sm border-0">
-                    <div class="card-header-custom d-flex align-items-center justify-content-between px-3 pt-3 pb-2">
-                        <h5 class="card-title mb-0 fw-bold text-dark">
-                            <i class="bi bi-building-fill text-primary me-2"></i>
-                            <span th:text="${room.name}">Название</span>
-                        </h5>
-                    </div>
-                    <div class="card-body d-flex flex-column pt-2">
-                        <div class="room-info-row mb-1">
-                            <span class="room-info-icon"><i class="bi bi-geo-alt-fill text-secondary"></i></span>
-                            <span class="text-muted" th:text="${room.location ?: 'Не указано'}">Расположение</span>
-                        </div>
-                        <div class="room-info-row mb-2">
-                            <span class="room-info-icon"><i class="bi bi-people-fill text-secondary"></i></span>
-                            <span class="text-muted">
-                                до <strong th:text="${room.capacity}">10</strong> человек
-                            </span>
-                        </div>
-                        <div class="d-flex flex-wrap gap-1 mb-3">
-                            <span th:if="${room.hasProjector}" class="badge-feature">
-                                <i class="bi bi-projector-fill"></i> Проектор
-                            </span>
-                            <span th:if="${room.hasWhiteboard}" class="badge-feature">
-                                <i class="bi bi-easel2-fill"></i> Доска
-                            </span>
-                            <span th:if="${!room.hasProjector and !room.hasWhiteboard}"
-                                  class="text-muted small fst-italic">Нет оснащения</span>
-                        </div>
-                        <hr class="my-2">
-                        <div class="availability-status p-2 rounded text-center"
-                             th:id="'status-' + ${room.id}">
-                            <div class="spinner-border spinner-border-sm text-secondary" role="status">
-                                <span class="visually-hidden">Загрузка...</span>
-                            </div>
-                            <span class="ms-2 small">Проверка доступности...</span>
-                        </div>
-                        <div class="time-check-status mt-2 p-2 rounded text-center small fw-semibold"
-                             th:id="'time-check-' + ${room.id}" style="display: none;">
-                        </div>
-                        <div class="time-slots-container mt-2" th:id="'slots-' + ${room.id}" style="display: none;">
-                            <small class="text-muted">Свободные слоты:</small>
-                            <div class="d-flex flex-wrap gap-1 mt-1" th:id="'slot-buttons-' + ${room.id}"></div>
-                        </div>
-                        <div class="mt-auto pt-3">
-                            <a th:href="@{/bookings/new(roomId=${room.id})}" class="btn btn-primary btn-sm w-100 fw-semibold">
-                                <i class="bi bi-calendar-plus"></i> Забронировать
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+<div class="container mt-4 pb-5">
 
-        <div th:if="${rooms.empty}" class="text-center py-5">
-            <i class="bi bi-door-closed fs-1 text-muted"></i>
-            <p class="mt-2 text-muted">Комнаты не найдены</p>
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Переговорные комнаты</h1>
+            <p class="page-subtitle">Выберите удобное место для встречи</p>
         </div>
-
-        <nav th:if="${totalPages > 0}" aria-label="Page navigation" class="mt-4">
-            <ul class="pagination justify-content-center">
-                <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
-                    <a class="page-link" th:href="@{/rooms(page=${currentPage - 1}, search=${search}, date=${selectedDate})}">
-                        <i class="bi bi-chevron-left"></i> Назад
-                    </a>
-                </li>
-                <li th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
-                    class="page-item" th:classappend="${i == currentPage} ? 'active'">
-                    <a class="page-link" th:href="@{/rooms(page=${i}, search=${search}, date=${selectedDate})}"
-                       th:text="${i + 1}">1</a>
-                </li>
-                <li class="page-item" th:classappend="${currentPage >= totalPages - 1} ? 'disabled'">
-                    <a class="page-link" th:href="@{/rooms(page=${currentPage + 1}, search=${search}, date=${selectedDate})}">
-                        Вперёд <i class="bi bi-chevron-right"></i>
-                    </a>
-                </li>
-            </ul>
-        </nav>
+        <a href="/bookings/new" class="btn btn-primary">
+            <i class="bi bi-plus-lg"></i> Новая встреча
+        </a>
     </div>
+
+    <div class="availability-panel mb-4">
+        <div class="availability-panel-header">
+            <i class="bi bi-sliders"></i>
+            <span>Найти свободную комнату</span>
+        </div>
+        <div class="availability-panel-body">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label">Дата</label>
+                    <input type="date" id="dateFilter" class="form-control"
+                           th:value="${#temporals.format(selectedDate, 'yyyy-MM-dd')}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Начало</label>
+                    <input type="time" id="startTimeFilter" class="form-control" value="10:00">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Конец</label>
+                    <input type="time" id="endTimeFilter" class="form-control" value="11:00">
+                </div>
+                <div class="col-md-3">
+                    <button id="checkAvailabilityBtn" class="btn btn-primary w-100">
+                        <i class="bi bi-search"></i> Проверить
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="stats-row mb-4">
+        <div class="stat-chip stat-chip-success">
+            <i class="bi bi-check-circle-fill"></i>
+            <span id="freeCount">—</span> свободно сейчас
+        </div>
+        <div class="stat-chip stat-chip-warning">
+            <i class="bi bi-clock-fill"></i>
+            <span id="availableAtTime">—</span> в выбранное время
+        </div>
+        <div class="stat-chip stat-chip-danger">
+            <i class="bi bi-x-circle-fill"></i>
+            <span id="busyCount">—</span> занято
+        </div>
+    </div>
+
+    <form method="get" action="/rooms" class="search-bar mb-4">
+        <i class="bi bi-search search-bar-icon"></i>
+        <input type="text" name="search" class="search-bar-input"
+               placeholder="Поиск по названию или местоположению..."
+               th:value="${search}">
+        <input type="hidden" name="date" th:value="${#temporals.format(selectedDate, 'yyyy-MM-dd')}">
+        <button type="submit" class="btn btn-primary btn-sm">Найти</button>
+        <a th:if="${search}" href="/rooms" class="btn btn-secondary btn-sm">
+            <i class="bi bi-x"></i> Сбросить
+        </a>
+    </form>
+
+    <div class="row g-3" id="roomsContainer">
+        <div th:each="room : ${rooms.content}"
+             class="col-md-6 col-lg-4"
+             th:data-room-id="${room.id}"
+             th:data-room-name="${room.name}">
+            <div class="room-card-v2">
+                <div class="room-card-top">
+                    <div class="room-card-icon">
+                        <i class="bi bi-building"></i>
+                    </div>
+                    <div class="room-avail-badge" th:id="'status-' + ${room.id}">
+                        <span class="spinner-border spinner-border-sm"></span>
+                    </div>
+                </div>
+                <div class="room-card-body">
+                    <h5 class="room-card-title" th:text="${room.name}">Комната</h5>
+                    <div class="room-meta">
+                        <span class="room-meta-item" th:if="${room.location}">
+                            <i class="bi bi-geo-alt"></i>
+                            <span th:text="${room.location}">Этаж 3</span>
+                        </span>
+                        <span class="room-meta-item">
+                            <i class="bi bi-people"></i>
+                            до <strong th:text="${room.capacity}">10</strong> чел.
+                        </span>
+                    </div>
+                    <div class="room-features">
+                        <span th:if="${room.hasProjector}" class="feature-tag">
+                            <i class="bi bi-display"></i> Проектор
+                        </span>
+                        <span th:if="${room.hasWhiteboard}" class="feature-tag">
+                            <i class="bi bi-easel2"></i> Доска
+                        </span>
+                    </div>
+                    <div class="time-check-badge" th:id="'time-check-' + ${room.id}" style="display:none;"></div>
+                </div>
+                <div class="room-card-footer">
+                    <a th:href="@{/bookings/new(roomId=${room.id})}" class="btn btn-primary w-100">
+                        <i class="bi bi-calendar-plus"></i> Забронировать
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div th:if="${rooms.empty}" class="empty-state mt-5">
+        <div class="empty-state-icon"><i class="bi bi-door-closed"></i></div>
+        <p class="empty-state-text">Комнаты не найдены</p>
+        <a href="/rooms" class="btn btn-secondary">Сбросить фильтры</a>
+    </div>
+
+    <nav th:if="${totalPages > 1}" class="mt-5">
+        <ul class="pagination-custom">
+            <li th:classappend="${currentPage == 0} ? 'disabled'">
+                <a th:href="@{/rooms(page=${currentPage - 1}, search=${search}, date=${selectedDate})}">
+                    <i class="bi bi-chevron-left"></i>
+                </a>
+            </li>
+            <li th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
+                th:classappend="${i == currentPage} ? 'active'">
+                <a th:href="@{/rooms(page=${i}, search=${search}, date=${selectedDate})}"
+                   th:text="${i + 1}">1</a>
+            </li>
+            <li th:classappend="${currentPage >= totalPages - 1} ? 'disabled'">
+                <a th:href="@{/rooms(page=${currentPage + 1}, search=${search}, date=${selectedDate})}">
+                    <i class="bi bi-chevron-right"></i>
+                </a>
+            </li>
+        </ul>
+    </nav>
 </div>
 
 <div th:replace="~{base :: footer}"></div>
 
+<style>
+    .availability-panel {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+        box-shadow: var(--shadow-sm);
+    }
+    .availability-panel-header {
+        background: var(--primary);
+        color: white;
+        padding: 12px 20px;
+        font-size: 13.5px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .availability-panel-body {
+        padding: 20px;
+    }
+
+    .stats-row {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+    .stat-chip {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        padding: 8px 16px;
+        border-radius: 100px;
+        font-size: 13px;
+        font-weight: 500;
+    }
+    .stat-chip-success { background: var(--success-light); color: #065f46; }
+    .stat-chip-warning { background: var(--warning-light); color: #92400e; }
+    .stat-chip-danger  { background: var(--danger-light);  color: #991b1b; }
+
+    .search-bar {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: var(--surface);
+        border: 1.5px solid var(--border);
+        border-radius: 12px;
+        padding: 8px 12px;
+        box-shadow: var(--shadow-sm);
+        transition: border-color 0.15s;
+    }
+    .search-bar:focus-within {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
+    }
+    .search-bar-icon { color: var(--text-muted); font-size: 15px; }
+    .search-bar-input {
+        flex: 1;
+        border: none;
+        background: transparent;
+        font-family: 'Inter', sans-serif;
+        font-size: 13.5px;
+        color: var(--text-primary);
+        outline: none;
+    }
+    .search-bar-input::placeholder { color: var(--text-muted); }
+
+    .room-card-v2 {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-xl);
+        overflow: hidden;
+        box-shadow: var(--shadow-sm);
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .room-card-v2:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--shadow-lg);
+    }
+    .room-card-top {
+        padding: 20px 20px 0;
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+    }
+    .room-card-icon {
+        width: 46px;
+        height: 46px;
+        background: var(--primary-light);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--primary);
+        font-size: 20px;
+    }
+    .room-avail-badge {
+        font-size: 12px;
+        font-weight: 600;
+        padding: 4px 10px;
+        border-radius: 20px;
+        background: var(--surface-3);
+        color: var(--text-muted);
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        transition: all 0.3s;
+    }
+    .room-avail-badge.free {
+        background: var(--success-light);
+        color: #065f46;
+    }
+    .room-avail-badge.busy {
+        background: var(--danger-light);
+        color: #991b1b;
+    }
+    .room-card-body { padding: 14px 20px; flex: 1; }
+    .room-card-title {
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 10px;
+        letter-spacing: -0.2px;
+    }
+    .room-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-bottom: 12px;
+    }
+    .room-meta-item {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 12.5px;
+        color: var(--text-secondary);
+    }
+    .room-meta-item i { color: var(--text-muted); }
+    .room-features { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+    .feature-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        background: var(--surface-3);
+        color: var(--text-secondary);
+        border-radius: 6px;
+        padding: 3px 9px;
+        font-size: 11.5px;
+        font-weight: 500;
+    }
+    .time-check-badge {
+        margin-top: 8px;
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-size: 12.5px;
+        font-weight: 500;
+    }
+    .time-check-badge.ok {
+        background: var(--success-light);
+        color: #065f46;
+    }
+    .time-check-badge.no {
+        background: var(--danger-light);
+        color: #991b1b;
+    }
+    .room-card-footer {
+        padding: 14px 20px 20px;
+        border-top: 1px solid var(--surface-3);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+    }
+    .empty-state-icon {
+        font-size: 52px;
+        color: var(--text-muted);
+        margin-bottom: 12px;
+        opacity: 0.5;
+    }
+    .empty-state-text {
+        font-size: 15px;
+        color: var(--text-muted);
+        margin-bottom: 20px;
+    }
+
+    .pagination-custom {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 4px;
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    .pagination-custom li a {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        border-radius: 9px;
+        color: var(--text-secondary);
+        text-decoration: none;
+        font-size: 13.5px;
+        font-weight: 500;
+        border: 1px solid var(--border);
+        background: var(--surface);
+        transition: all 0.15s;
+    }
+    .pagination-custom li.active a {
+        background: var(--primary);
+        color: white;
+        border-color: var(--primary);
+    }
+    .pagination-custom li.disabled a {
+        opacity: 0.4;
+        pointer-events: none;
+    }
+    .pagination-custom li a:hover:not(.pagination-custom li.active a):not(.pagination-custom li.disabled a) {
+        background: var(--surface-3);
+        color: var(--text-primary);
+    }
+</style>
+
 <script>
-    let currentDate = document.getElementById('dateFilter')?.value
-        || new Date().toISOString().split('T')[0];
-    let currentStartTime = document.getElementById('startTimeFilter')?.value || '10:00';
-    let currentEndTime = document.getElementById('endTimeFilter')?.value || '11:00';
+    let currentDate = document.getElementById('dateFilter')?.value || new Date().toISOString().split('T')[0];
+    let currentStartTime = '10:00';
+    let currentEndTime = '11:00';
+
     async function loadAllRoomsStatus(date, startTime, endTime) {
-        const roomCards = document.querySelectorAll('[data-room-id]')
-        let freeCount = 0;
-        let busyCount = 0;
-        let availableAtTimeCount = 0;
+        const roomCards = document.querySelectorAll('[data-room-id]');
+        let freeCount = 0, busyCount = 0, availableAtTimeCount = 0;
+
         for (const card of roomCards) {
             const roomId = card.dataset.roomId;
             const result = await loadRoomStatus(roomId, date, startTime, endTime);
@@ -187,182 +391,80 @@
             if (result.status === 'BUSY') busyCount++;
             if (result.availableAtTime) availableAtTimeCount++;
         }
+
         document.getElementById('freeCount').innerText = freeCount;
         document.getElementById('busyCount').innerText = busyCount;
         document.getElementById('availableAtTime').innerText = availableAtTimeCount;
     }
+
     async function loadRoomStatus(roomId, date, startTime, endTime) {
         try {
             const response = await fetch(`/api/rooms/${roomId}/status?date=${date}`);
             const data = await response.json();
-
             const availableAtTime = checkAvailabilityAtTime(data, date, startTime, endTime);
-
             updateUI(roomId, data, availableAtTime, startTime, endTime);
-
-            return {
-                status: data.availabilityStatus,
-                availableAtTime
-            };
-
+            return { status: data.availabilityStatus, availableAtTime };
         } catch (e) {
-            console.error(e);
             const el = document.getElementById(`status-${roomId}`);
-            if (el) el.innerHTML = `<span class="text-danger">Ошибка</span>`;
+            if (el) el.innerHTML = `<i class="bi bi-exclamation-circle"></i> Ошибка`;
             return null;
         }
     }
+
     function checkAvailabilityAtTime(data, date, startTime, endTime) {
         if (!data.timeSlots || !startTime || !endTime) return false;
-
         const selectedStart = new Date(`${date}T${startTime}:00`);
         const selectedEnd = new Date(`${date}T${endTime}:00`);
-
         if (selectedEnd <= selectedStart) return false;
-
-        const hasConflict = data.timeSlots.some(slot => {
+        return !data.timeSlots.some(slot => {
             if (slot.isAvailable) return false;
-
             const slotStart = new Date(slot.start);
             const slotEnd = new Date(slot.end);
-
             return selectedStart < slotEnd && selectedEnd > slotStart;
         });
-
-        return !hasConflict;
     }
+
     function updateUI(roomId, data, availableAtTime, startTime, endTime) {
-        const statusDiv = document.getElementById(`status-${roomId}`);
-        const timeCheckDiv = document.getElementById(`time-check-${roomId}`);
-
-        if (!statusDiv) return;
-
-        let html = '';
-        let cls = '';
+        const badge = document.getElementById(`status-${roomId}`);
+        const timeDiv = document.getElementById(`time-check-${roomId}`);
+        if (!badge) return;
 
         if (data.availabilityStatus === 'FREE') {
-            html = `<i class="bi bi-check-circle-fill text-success"></i> Свободно сейчас`;
-            cls = 'bg-success bg-opacity-10 text-success';
+            badge.className = 'room-avail-badge free';
+            badge.innerHTML = `<i class="bi bi-check-circle-fill"></i> Свободно`;
         } else if (data.availabilityStatus === 'BUSY') {
-            html = `<i class="bi bi-x-circle-fill text-danger"></i> Занято`;
-            cls = 'bg-danger bg-opacity-10 text-danger';
+            badge.className = 'room-avail-badge busy';
+            badge.innerHTML = `<i class="bi bi-x-circle-fill"></i> Занято`;
         } else {
-            html = `<i class="bi bi-slash-circle text-secondary"></i> Недоступна`;
-            cls = 'bg-secondary bg-opacity-10 text-secondary';
+            badge.className = 'room-avail-badge';
+            badge.innerHTML = `<i class="bi bi-dash-circle"></i> Нет данных`;
         }
 
-        statusDiv.className = `availability-status mt-2 p-2 rounded text-center ${cls}`;
-        statusDiv.innerHTML = html;
-
-        if (timeCheckDiv && startTime && endTime) {
-            timeCheckDiv.style.display = 'block';
-
+        if (timeDiv && startTime && endTime) {
+            timeDiv.style.display = 'block';
             if (availableAtTime) {
-                timeCheckDiv.innerHTML =
-                    `<span class="text-success">Свободна ${startTime} - ${endTime}</span>`;
+                timeDiv.className = 'time-check-badge ok';
+                timeDiv.innerHTML = `<i class="bi bi-check2"></i> Свободна ${startTime} — ${endTime}`;
             } else {
-                timeCheckDiv.innerHTML =
-                    `<span class="text-danger">Занята ${startTime} - ${endTime}</span>`;
+                timeDiv.className = 'time-check-badge no';
+                timeDiv.innerHTML = `<i class="bi bi-x"></i> Занята ${startTime} — ${endTime}`;
             }
         }
     }
+
     document.getElementById('dateFilter')?.addEventListener('change', e => {
         currentDate = e.target.value;
         loadAllRoomsStatus(currentDate, currentStartTime, currentEndTime);
     });
-
-    document.getElementById('startTimeFilter')?.addEventListener('change', e => {
-        currentStartTime = e.target.value;
-    });
-
-    document.getElementById('endTimeFilter')?.addEventListener('change', e => {
-        currentEndTime = e.target.value;
-    });
-
+    document.getElementById('startTimeFilter')?.addEventListener('change', e => { currentStartTime = e.target.value; });
+    document.getElementById('endTimeFilter')?.addEventListener('change', e => { currentEndTime = e.target.value; });
     document.getElementById('checkAvailabilityBtn')?.addEventListener('click', () => {
         loadAllRoomsStatus(currentDate, currentStartTime, currentEndTime);
     });
+
     document.addEventListener('DOMContentLoaded', () => {
         loadAllRoomsStatus(currentDate, currentStartTime, currentEndTime);
     });
 </script>
-
-<style>
-    .room-card {
-        border-radius: 16px !important;
-        overflow: hidden;
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-    .room-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12) !important;
-    }
-
-    .card-header-custom {
-        border-bottom: 1px solid #f0f0f0;
-    }
-
-    .room-info-row {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        font-size: 0.9rem;
-    }
-
-    .room-info-icon {
-        width: 20px;
-        text-align: center;
-        flex-shrink: 0;
-    }
-    .badge-feature {
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-        background-color: #eef2ff;
-        color: #3730a3;
-        border: 1px solid #c7d2fe;
-        border-radius: 20px;
-        padding: 3px 10px;
-        font-size: 0.75rem;
-        font-weight: 500;
-    }
-    .availability-status {
-        transition: all 0.3s ease;
-        font-size: 0.875rem;
-        font-weight: 500;
-        border-radius: 10px !important;
-    }
-    .time-check-status {
-        transition: all 0.3s ease;
-        border-radius: 10px !important;
-        font-size: 0.85rem;
-    }
-    .time-slot {
-        padding: 4px 8px;
-        border-radius: 12px;
-        font-size: 0.7rem;
-        text-align: center;
-        cursor: pointer;
-        border: none;
-        transition: all 0.2s;
-    }
-    .time-slot.free {
-        background-color: #d1e7dd;
-        color: #0f5132;
-    }
-    .time-slot.free:hover {
-        background-color: #badbcc;
-        transform: scale(1.02);
-    }
-    .time-slot.selected {
-        background-color: #0d6efd;
-        color: white;
-    }
-
-    hr {
-        opacity: 0.1;
-    }
-</style>
-
 </body>
 </html>
